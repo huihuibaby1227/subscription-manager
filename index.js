@@ -2977,6 +2977,10 @@ const configPage = `
                 <span class="ml-2 text-sm text-gray-700">邮件通知</span>
               </label>
               <label class="inline-flex items-center">
+                <input type="checkbox" name="enabledNotifiers" value="discord" class="form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                <span class="ml-2 text-sm text-gray-700">Discord</span>
+              </label>
+              <label class="inline-flex items-center">
                 <input type="checkbox" name="enabledNotifiers" value="bark" class="form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                 <span class="ml-2 text-sm text-gray-700">Bark</span>
               </label>
@@ -3111,6 +3115,16 @@ const configPage = `
                 <input type="text" id="resendApiKey" placeholder="re_xxxxxxxxxx" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 <p class="mt-1 text-sm text-gray-500">从 <a href="https://resend.com/api-keys" target="_blank" class="text-indigo-600 hover:text-indigo-800">Resend控制台</a> 获取的 API Key</p>
               </div>
+              <div class="border-t pt-4">
+                <p class="text-sm text-gray-700 mb-2">推荐使用 Gmail API（OAuth2）在 Cloudflare Workers 环境中发送邮件：</p>
+                <label for="gmailClientId" class="block text-sm font-medium text-gray-700">Gmail Client ID</label>
+                <input type="text" id="gmailClientId" placeholder="your-google-client-id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <label for="gmailClientSecret" class="block text-sm font-medium text-gray-700 mt-3">Gmail Client Secret</label>
+                <input type="text" id="gmailClientSecret" placeholder="your-google-client-secret" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <label for="gmailRefreshToken" class="block text-sm font-medium text-gray-700 mt-3">Gmail Refresh Token</label>
+                <input type="text" id="gmailRefreshToken" placeholder="your-refresh-token" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <p class="mt-1 text-sm text-gray-500">在 Google Cloud Console 开启 Gmail API，授权并取得 refresh token</p>
+              </div>
               <div>
                 <label for="emailFrom" class="block text-sm font-medium text-gray-700">发件人邮箱</label>
                 <input type="email" id="emailFrom" placeholder="noreply@yourdomain.com" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -3130,6 +3144,29 @@ const configPage = `
             <div class="flex justify-end">
               <button type="button" id="testEmailBtn" class="btn-secondary text-white px-4 py-2 rounded-md text-sm font-medium">
                 <i class="fas fa-paper-plane mr-2"></i>测试 邮件通知
+              </button>
+            </div>
+          </div>
+
+          <div id="discordConfig" class="config-section">
+            <h4 class="text-md font-medium text-gray-900 mb-3">Discord 通知 配置</h4>
+            <div class="grid grid-cols-1 gap-4 mb-4">
+              <div>
+                <label for="discordWebhook" class="block text-sm font-medium text-gray-700">Discord Webhook URL</label>
+                <input type="url" id="discordWebhook" placeholder="https://discord.com/api/webhooks/xxx" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+              <div>
+                <label for="discordUsername" class="block text-sm font-medium text-gray-700">显示名称（可选）</label>
+                <input type="text" id="discordUsername" placeholder="订阅提醒系统" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+              <div>
+                <label for="discordAvatar" class="block text-sm font-medium text-gray-700">头像 URL（可选）</label>
+                <input type="url" id="discordAvatar" placeholder="https://example.com/avatar.png" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button type="button" id="testDiscordBtn" class="btn-secondary text-white px-4 py-2 rounded-md text-sm font-medium">
+                <i class="fas fa-paper-plane mr-2"></i>测试 Discord 通知
               </button>
             </div>
           </div>
@@ -3209,15 +3246,27 @@ const configPage = `
         document.getElementById('webhookUrl').value = config.WEBHOOK_URL || '';
         document.getElementById('webhookMethod').value = config.WEBHOOK_METHOD || 'POST';
         document.getElementById('webhookHeaders').value = config.WEBHOOK_HEADERS || '';
-        document.getElementById('webhookTemplate').value = config.WEBHOOK_TEMPLATE || '';
-        document.getElementById('wechatbotWebhook').value = config.WECHATBOT_WEBHOOK || '';
+    document.getElementById('webhookTemplate').value = config.WEBHOOK_TEMPLATE || '';
+    document.getElementById('wechatbotWebhook').value = config.WECHATBOT_WEBHOOK || '';
         document.getElementById('wechatbotMsgType').value = config.WECHATBOT_MSG_TYPE || 'text';
         document.getElementById('wechatbotAtMobiles').value = config.WECHATBOT_AT_MOBILES || '';
         document.getElementById('wechatbotAtAll').checked = config.WECHATBOT_AT_ALL === 'true';
-        document.getElementById('resendApiKey').value = config.RESEND_API_KEY || '';
-        document.getElementById('emailFrom').value = config.EMAIL_FROM || '';
-        document.getElementById('emailFromName').value = config.EMAIL_FROM_NAME || '订阅提醒系统';
-        document.getElementById('emailTo').value = config.EMAIL_TO || '';
+    document.getElementById('resendApiKey').value = config.RESEND_API_KEY || '';
+    const gmailClientIdEl = document.getElementById('gmailClientId');
+    const gmailClientSecretEl = document.getElementById('gmailClientSecret');
+    const gmailRefreshTokenEl = document.getElementById('gmailRefreshToken');
+    if (gmailClientIdEl) gmailClientIdEl.value = config.GMAIL_CLIENT_ID || '';
+    if (gmailClientSecretEl) gmailClientSecretEl.value = config.GMAIL_CLIENT_SECRET || '';
+    if (gmailRefreshTokenEl) gmailRefreshTokenEl.value = config.GMAIL_REFRESH_TOKEN || '';
+    document.getElementById('emailFrom').value = config.EMAIL_FROM || '';
+    document.getElementById('emailFromName').value = config.EMAIL_FROM_NAME || '订阅提醒系统';
+    document.getElementById('emailTo').value = config.EMAIL_TO || '';
+    const discordWebhookEl = document.getElementById('discordWebhook');
+    const discordUsernameEl = document.getElementById('discordUsername');
+    const discordAvatarEl = document.getElementById('discordAvatar');
+    if (discordWebhookEl) discordWebhookEl.value = config.DISCORD_WEBHOOK_URL || '';
+    if (discordUsernameEl) discordUsernameEl.value = config.DISCORD_USERNAME || '';
+    if (discordAvatarEl) discordAvatarEl.value = config.DISCORD_AVATAR_URL || '';
         document.getElementById('barkServer').value = config.BARK_SERVER || 'https://api.day.app';
         document.getElementById('barkDeviceKey').value = config.BARK_DEVICE_KEY || '';
         document.getElementById('barkIsArchive').checked = config.BARK_IS_ARCHIVE === 'true';
@@ -3287,10 +3336,11 @@ const configPage = `
       const webhookConfig = document.getElementById('webhookConfig');
       const wechatbotConfig = document.getElementById('wechatbotConfig');
       const emailConfig = document.getElementById('emailConfig');
+      const discordConfig = document.getElementById('discordConfig');
       const barkConfig = document.getElementById('barkConfig');
 
       // 重置所有配置区域
-      [telegramConfig, notifyxConfig, webhookConfig, wechatbotConfig, emailConfig, barkConfig].forEach(config => {
+      [telegramConfig, notifyxConfig, webhookConfig, wechatbotConfig, emailConfig, discordConfig, barkConfig].forEach(config => {
         config.classList.remove('active', 'inactive');
         config.classList.add('inactive');
       });
@@ -3312,6 +3362,9 @@ const configPage = `
         } else if (type === 'email') {
           emailConfig.classList.remove('inactive');
           emailConfig.classList.add('active');
+        } else if (type === 'discord') {
+          discordConfig.classList.remove('inactive');
+          discordConfig.classList.add('active');
         } else if (type === 'bark') {
           barkConfig.classList.remove('inactive');
           barkConfig.classList.add('active');
@@ -3353,9 +3406,15 @@ const configPage = `
         WECHATBOT_AT_MOBILES: document.getElementById('wechatbotAtMobiles').value.trim(),
         WECHATBOT_AT_ALL: document.getElementById('wechatbotAtAll').checked.toString(),
         RESEND_API_KEY: document.getElementById('resendApiKey').value.trim(),
+        GMAIL_CLIENT_ID: (document.getElementById('gmailClientId')?.value || '').trim(),
+        GMAIL_CLIENT_SECRET: (document.getElementById('gmailClientSecret')?.value || '').trim(),
+        GMAIL_REFRESH_TOKEN: (document.getElementById('gmailRefreshToken')?.value || '').trim(),
         EMAIL_FROM: document.getElementById('emailFrom').value.trim(),
         EMAIL_FROM_NAME: document.getElementById('emailFromName').value.trim(),
         EMAIL_TO: document.getElementById('emailTo').value.trim(),
+        DISCORD_WEBHOOK_URL: (document.getElementById('discordWebhook')?.value || '').trim(),
+        DISCORD_USERNAME: (document.getElementById('discordUsername')?.value || '').trim(),
+        DISCORD_AVATAR_URL: (document.getElementById('discordAvatar')?.value || '').trim(),
         BARK_SERVER: document.getElementById('barkServer').value.trim() || 'https://api.day.app',
         BARK_DEVICE_KEY: document.getElementById('barkDeviceKey').value.trim(),
         BARK_IS_ARCHIVE: document.getElementById('barkIsArchive').checked.toString(),
@@ -3414,6 +3473,7 @@ const configPage = `
                       type === 'notifyx' ? 'testNotifyXBtn' :
                       type === 'wechatbot' ? 'testWechatBotBtn' :
                       type === 'email' ? 'testEmailBtn' :
+                      type === 'discord' ? 'testDiscordBtn' :
                       type === 'bark' ? 'testBarkBtn' : 'testWebhookBtn';
       const button = document.getElementById(buttonId);
       const originalContent = button.innerHTML;
@@ -3421,6 +3481,7 @@ const configPage = `
                           type === 'notifyx' ? 'NotifyX' :
                           type === 'wechatbot' ? '企业微信机器人' :
                           type === 'email' ? '邮件通知' :
+                          type === 'discord' ? 'Discord' :
                           type === 'bark' ? 'Bark' : '企业微信应用通知';
 
       button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>测试中...';
@@ -3472,12 +3533,34 @@ const configPage = `
         }
       } else if (type === 'email') {
         config.RESEND_API_KEY = document.getElementById('resendApiKey').value.trim();
+        config.GMAIL_CLIENT_ID = (document.getElementById('gmailClientId')?.value || '').trim();
+        config.GMAIL_CLIENT_SECRET = (document.getElementById('gmailClientSecret')?.value || '').trim();
+        config.GMAIL_REFRESH_TOKEN = (document.getElementById('gmailRefreshToken')?.value || '').trim();
         config.EMAIL_FROM = document.getElementById('emailFrom').value.trim();
         config.EMAIL_FROM_NAME = document.getElementById('emailFromName').value.trim();
         config.EMAIL_TO = document.getElementById('emailTo').value.trim();
 
-        if (!config.RESEND_API_KEY || !config.EMAIL_FROM || !config.EMAIL_TO) {
-          showToast('请先填写 Resend API Key、发件人邮箱和收件人邮箱', 'warning');
+        const hasGmail = !!(config.GMAIL_CLIENT_ID && config.GMAIL_CLIENT_SECRET && config.GMAIL_REFRESH_TOKEN);
+        const hasResend = !!(config.RESEND_API_KEY);
+        if (!hasGmail && !hasResend) {
+          showToast('请先填写 Gmail OAuth2 或 Resend 配置至少其一', 'warning');
+          button.innerHTML = originalContent;
+          button.disabled = false;
+          return;
+        }
+        if (!config.EMAIL_FROM || !config.EMAIL_TO) {
+          showToast('请填写发件人邮箱和收件人邮箱', 'warning');
+          button.innerHTML = originalContent;
+          button.disabled = false;
+          return;
+        }
+      } else if (type === 'discord') {
+        config.DISCORD_WEBHOOK_URL = (document.getElementById('discordWebhook')?.value || '').trim();
+        config.DISCORD_USERNAME = (document.getElementById('discordUsername')?.value || '').trim();
+        config.DISCORD_AVATAR_URL = (document.getElementById('discordAvatar')?.value || '').trim();
+
+        if (!config.DISCORD_WEBHOOK_URL) {
+          showToast('请先填写 Discord Webhook URL', 'warning');
           button.innerHTML = originalContent;
           button.disabled = false;
           return;
@@ -3536,6 +3619,10 @@ const configPage = `
 
     document.getElementById('testEmailBtn').addEventListener('click', () => {
       testNotification('email');
+    });
+
+    document.getElementById('testDiscordBtn').addEventListener('click', () => {
+      testNotification('discord');
     });
 
     document.getElementById('testBarkBtn').addEventListener('click', () => {
@@ -3880,6 +3967,19 @@ const api = {
 
           success = await sendEmailNotification(title, content, testConfig);
           message = success ? '邮件通知发送成功' : '邮件通知发送失败，请检查配置';
+        } else if (body.type === 'discord') {
+          const testConfig = {
+            ...config,
+            DISCORD_WEBHOOK_URL: body.DISCORD_WEBHOOK_URL,
+            DISCORD_USERNAME: body.DISCORD_USERNAME,
+            DISCORD_AVATAR_URL: body.DISCORD_AVATAR_URL
+          };
+
+          const title = '测试通知';
+          const content = '这是一条测试通知，用于验证Discord通知功能是否正常工作。\n\n发送时间: ' + formatBeijingTime();
+
+          success = await sendDiscordNotification(title, content, testConfig);
+          message = success ? 'Discord通知发送成功' : 'Discord通知发送失败，请检查配置';
         } else if (body.type === 'bark') {
           const testConfig = {
             ...config,
@@ -4093,10 +4193,18 @@ async function getConfig(env) {
       WECHATBOT_MSG_TYPE: config.WECHATBOT_MSG_TYPE || 'text',
       WECHATBOT_AT_MOBILES: config.WECHATBOT_AT_MOBILES || '',
       WECHATBOT_AT_ALL: config.WECHATBOT_AT_ALL || 'false',
+      // Gmail 邮件配置
+      GMAIL_CLIENT_ID: config.GMAIL_CLIENT_ID || '',
+      GMAIL_CLIENT_SECRET: config.GMAIL_CLIENT_SECRET || '',
+      GMAIL_REFRESH_TOKEN: config.GMAIL_REFRESH_TOKEN || '',
       RESEND_API_KEY: config.RESEND_API_KEY || '',
       EMAIL_FROM: config.EMAIL_FROM || '',
       EMAIL_FROM_NAME: config.EMAIL_FROM_NAME || '',
       EMAIL_TO: config.EMAIL_TO || '',
+      // Discord 配置
+      DISCORD_WEBHOOK_URL: config.DISCORD_WEBHOOK_URL || '',
+      DISCORD_USERNAME: config.DISCORD_USERNAME || '',
+      DISCORD_AVATAR_URL: config.DISCORD_AVATAR_URL || '',
       BARK_DEVICE_KEY: config.BARK_DEVICE_KEY || '',
       BARK_SERVER: config.BARK_SERVER || 'https://api.day.app',
       BARK_IS_ARCHIVE: config.BARK_IS_ARCHIVE || 'false',
@@ -4126,10 +4234,18 @@ async function getConfig(env) {
       WECHATBOT_MSG_TYPE: 'text',
       WECHATBOT_AT_MOBILES: '',
       WECHATBOT_AT_ALL: 'false',
+      // Gmail 邮件配置
+      GMAIL_CLIENT_ID: '',
+      GMAIL_CLIENT_SECRET: '',
+      GMAIL_REFRESH_TOKEN: '',
       RESEND_API_KEY: '',
       EMAIL_FROM: '',
       EMAIL_FROM_NAME: '',
       EMAIL_TO: '',
+      // Discord 配置
+      DISCORD_WEBHOOK_URL: '',
+      DISCORD_USERNAME: '',
+      DISCORD_AVATAR_URL: '',
       ENABLED_NOTIFIERS: ['notifyx'],
       TIMEZONE: 'UTC' // 新增时区字段
     };
@@ -4669,6 +4785,11 @@ async function sendNotificationToAllChannels(title, commonContent, config, logPr
         const success = await sendWechatBotNotification(title, wechatbotContent, config);
         console.log(`${logPrefix} 发送企业微信机器人通知 ${success ? '成功' : '失败'}`);
     }
+    if (config.ENABLED_NOTIFIERS.includes('discord')) {
+        const discordContent = commonContent.replace(/(\**|\*|##|#|`)/g, '');
+        const success = await sendDiscordNotification(title, discordContent, config);
+        console.log(`${logPrefix} 发送Discord通知 ${success ? '成功' : '失败'}`);
+    }
     if (config.ENABLED_NOTIFIERS.includes('weixin')) {
         const weixinContent = `【${title}】\n\n${commonContent.replace(/(\**|\*|##|#|`)/g, '')}`;
         const result = await sendWeComNotification(weixinContent, config);
@@ -4785,14 +4906,115 @@ async function sendBarkNotification(title, content, config) {
   }
 }
 
-async function sendEmailNotification(title, content, config) {
+// Gmail API 助手函式
+function base64urlEncode(text) {
   try {
-    if (!config.RESEND_API_KEY || !config.EMAIL_FROM || !config.EMAIL_TO) {
-      console.error('[邮件通知] 通知未配置，缺少必要参数');
+    const bytes = new TextEncoder().encode(text);
+    let binary = '';
+    for (const b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  } catch (e) {
+    console.error('[邮件通知] Base64url 编码失败:', e);
+    return '';
+  }
+}
+
+function buildRawEmail(from, to, subject, html, text) {
+  const boundary = '====multipart-boundary====';
+  const plain = text || html.replace(/<[^>]+>/g, '');
+  const message = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    '',
+    plain,
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    '',
+    html,
+    `--${boundary}--`
+  ].join('\r\n');
+  return base64urlEncode(message);
+}
+
+async function getGmailAccessToken(config) {
+  const clientId = config.GMAIL_CLIENT_ID;
+  const clientSecret = config.GMAIL_CLIENT_SECRET;
+  const refreshToken = config.GMAIL_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    console.error('[邮件通知] 缺少 Gmail OAuth2 配置 (clientId/clientSecret/refreshToken)');
+    return null;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token'
+    });
+    const resp = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.access_token) {
+      console.error('[邮件通知] 获取 Gmail access_token 失败:', data);
+      return null;
+    }
+    return data.access_token;
+  } catch (err) {
+    console.error('[邮件通知] 获取 Gmail access_token 异常:', err);
+    return null;
+  }
+}
+
+// Discord 通知
+async function sendDiscordNotification(title, content, config) {
+  try {
+    if (!config.DISCORD_WEBHOOK_URL) {
+      console.error('[Discord] 通知未配置，缺少 Webhook URL');
       return false;
     }
 
-    console.log('[邮件通知] 开始发送邮件到: ' + config.EMAIL_TO);
+    console.log('[Discord] 开始发送通知到: ' + config.DISCORD_WEBHOOK_URL);
+
+    const payload = {
+      content: `**${title}**\n\n${content}`
+    };
+    if (config.DISCORD_USERNAME) payload.username = config.DISCORD_USERNAME;
+    if (config.DISCORD_AVATAR_URL) payload.avatar_url = config.DISCORD_AVATAR_URL;
+
+    const response = await fetch(config.DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      console.log('[Discord] 通知发送成功');
+      return true;
+    } else {
+      const result = await response.text();
+      console.error('[Discord] 通知发送失败:', response.status, result);
+      return false;
+    }
+  } catch (error) {
+    console.error('[Discord] 发送通知失败:', error);
+    return false;
+  }
+}
+
+async function sendEmailNotification(title, content, config) {
+  try {
+    console.log('[邮件通知] 准备发送: ' + (config.EMAIL_TO || '未知收件人'));
 
     // 生成HTML邮件内容
     const htmlContent = `
@@ -4832,36 +5054,65 @@ async function sendEmailNotification(title, content, config) {
     </div>
 </body>
 </html>`;
+    // 优先使用 Gmail API 发送
+    if (config.GMAIL_CLIENT_ID && config.GMAIL_CLIENT_SECRET && config.GMAIL_REFRESH_TOKEN) {
+      if (!config.EMAIL_FROM || !config.EMAIL_TO) {
+        console.error('[邮件通知] Gmail 路径缺少发件人或收件人');
+        return false;
+      }
 
-    const fromEmail = config.EMAIL_FROM_NAME ?
-      `${config.EMAIL_FROM_NAME} <${config.EMAIL_FROM}>` :
-      config.EMAIL_FROM;
+      const fromEmail = config.EMAIL_FROM_NAME ? `${config.EMAIL_FROM_NAME} <${config.EMAIL_FROM}>` : config.EMAIL_FROM;
+      const accessToken = await getGmailAccessToken(config);
+      if (!accessToken) return false;
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${config.RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: config.EMAIL_TO,
-        subject: title,
-        html: htmlContent,
-        text: content // 纯文本备用
-      })
-    });
-
-    const result = await response.json();
-    console.log('[邮件通知] 发送结果:', response.status, result);
-
-    if (response.ok && result.id) {
-      console.log('[邮件通知] 邮件发送成功，ID:', result.id);
-      return true;
-    } else {
-      console.error('[邮件通知] 邮件发送失败:', result);
+      const raw = buildRawEmail(fromEmail, config.EMAIL_TO, title, htmlContent, content);
+      const gmailResp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ raw })
+      });
+      const gmailResult = await gmailResp.json();
+      console.log('[邮件通知] Gmail 发送结果:', gmailResp.status, gmailResult);
+      if (gmailResp.ok && gmailResult.id) {
+        console.log('[邮件通知] Gmail 邮件发送成功，ID:', gmailResult.id);
+        return true;
+      }
+      console.error('[邮件通知] Gmail 邮件发送失败:', gmailResult);
       return false;
     }
+
+    // 后备：仍支持 Resend（如果配置存在）
+    if (config.RESEND_API_KEY && config.EMAIL_FROM && config.EMAIL_TO) {
+      const fromEmail = config.EMAIL_FROM_NAME ? `${config.EMAIL_FROM_NAME} <${config.EMAIL_FROM}>` : config.EMAIL_FROM;
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: config.EMAIL_TO,
+          subject: title,
+          html: htmlContent,
+          text: content
+        })
+      });
+      const result = await response.json();
+      console.log('[邮件通知] Resend 发送结果:', response.status, result);
+      if (response.ok && result.id) {
+        console.log('[邮件通知] Resend 邮件发送成功，ID:', result.id);
+        return true;
+      }
+      console.error('[邮件通知] Resend 邮件发送失败:', result);
+      return false;
+    }
+
+    console.error('[邮件通知] 未提供 Gmail 或 Resend 的必要配置');
+    return false;
   } catch (error) {
     console.error('[邮件通知] 发送邮件失败:', error);
     return false;
