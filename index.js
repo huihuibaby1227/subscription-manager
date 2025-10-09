@@ -3860,10 +3860,18 @@ const api = {
             WECHATBOT_MSG_TYPE: newConfig.WECHATBOT_MSG_TYPE || 'text',
             WECHATBOT_AT_MOBILES: newConfig.WECHATBOT_AT_MOBILES || '',
             WECHATBOT_AT_ALL: newConfig.WECHATBOT_AT_ALL || 'false',
+            // Gmail 郵件設定
+            GMAIL_CLIENT_ID: newConfig.GMAIL_CLIENT_ID || '',
+            GMAIL_CLIENT_SECRET: newConfig.GMAIL_CLIENT_SECRET || '',
+            GMAIL_REFRESH_TOKEN: newConfig.GMAIL_REFRESH_TOKEN || '',
             RESEND_API_KEY: newConfig.RESEND_API_KEY || '',
             EMAIL_FROM: newConfig.EMAIL_FROM || '',
             EMAIL_FROM_NAME: newConfig.EMAIL_FROM_NAME || '',
             EMAIL_TO: newConfig.EMAIL_TO || '',
+            // Discord 設定
+            DISCORD_WEBHOOK_URL: newConfig.DISCORD_WEBHOOK_URL || '',
+            DISCORD_USERNAME: newConfig.DISCORD_USERNAME || '',
+            DISCORD_AVATAR_URL: newConfig.DISCORD_AVATAR_URL || '',
             BARK_DEVICE_KEY: newConfig.BARK_DEVICE_KEY || '',
             BARK_SERVER: newConfig.BARK_SERVER || 'https://api.day.app',
             BARK_IS_ARCHIVE: newConfig.BARK_IS_ARCHIVE || 'false',
