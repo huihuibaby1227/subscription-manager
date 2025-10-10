@@ -4984,7 +4984,7 @@ async function getGmailAccessToken(config) {
   }
 }
 
-// Discord 通知
+// Discord 通知（分段 & 速率限制處理）
 async function sendDiscordNotification(title, content, config) {
   try {
     if (!config.DISCORD_WEBHOOK_URL) {
@@ -4994,26 +4994,77 @@ async function sendDiscordNotification(title, content, config) {
 
     console.log('[Discord] 開始發送通知到: ' + config.DISCORD_WEBHOOK_URL);
 
-    const payload = {
-      content: `**${title}**\n\n${content}`
-    };
-    if (config.DISCORD_USERNAME) payload.username = config.DISCORD_USERNAME;
-    if (config.DISCORD_AVATAR_URL) payload.avatar_url = config.DISCORD_AVATAR_URL;
+    // Discord 對 content 長度限制為 2000 字符，保守使用 1900
+    const maxLen = 1900;
+    const header = `**${title}**\n\n`;
+    const full = header + content;
 
-    const response = await fetch(config.DISCORD_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      console.log('[Discord] 通知發送成功');
-      return true;
-    } else {
-      const result = await response.text();
-      console.error('[Discord] 通知發送失敗:', response.status, result);
-      return false;
+    // 依行分段，確保每段不超過限制
+    const lines = full.split('\n');
+    const chunks = [];
+    let current = '';
+    for (const line of lines) {
+      const candidate = current ? current + '\n' + line : line;
+      if (candidate.length <= maxLen) {
+        current = candidate;
+      } else {
+        if (current) chunks.push(current);
+        // 若單行過長，硬切分
+        if (line.length > maxLen) {
+          for (let i = 0; i < line.length; i += maxLen) {
+            chunks.push(line.slice(i, i + maxLen));
+          }
+          current = '';
+        } else {
+          current = line;
+        }
+      }
     }
+    if (current) chunks.push(current);
+
+    // 順序發送每個分段，處理 429 速率限制
+    let allOk = true;
+    for (let i = 0; i < chunks.length; i++) {
+      const payload = { content: chunks[i] };
+      if (config.DISCORD_USERNAME) payload.username = config.DISCORD_USERNAME;
+      if (config.DISCORD_AVATAR_URL) payload.avatar_url = config.DISCORD_AVATAR_URL;
+
+      const resp = await fetch(config.DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (resp.status === 429) {
+        const body = await resp.json().catch(() => ({}));
+        const waitMs = Math.ceil((body.retry_after || 1) * 1000);
+        console.warn('[Discord] 命中速率限制，等待毫秒:', waitMs);
+        await new Promise(r => setTimeout(r, waitMs));
+        // 重試一次
+        const retry = await fetch(config.DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!retry.ok) {
+          const txt = await retry.text();
+          console.error('[Discord] 重試仍失敗:', retry.status, txt);
+          allOk = false;
+          break;
+        }
+        continue;
+      }
+
+      if (!resp.ok) {
+        const txt = await resp.text();
+        console.error('[Discord] 通知發送失敗:', resp.status, txt);
+        allOk = false;
+        break;
+      }
+    }
+
+    if (allOk) console.log('[Discord] 通知發送成功（分段共 ' + chunks.length + ' 條）');
+    return allOk;
   } catch (error) {
     console.error('[Discord] 發送通知失敗:', error);
     return false;
